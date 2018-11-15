@@ -1,6 +1,7 @@
 
 const NUM_PARTICLES = 100000;
-
+const VIBRATION_INTENSITY = 2;
+const HALF_VIBRATION = VIBRATION_INTENSITY / 2;
 
 /**
  * https://stackoverflow.com/a/52827031/778272
@@ -89,8 +90,8 @@ function init() {
             let y = particles[i + 1];
 
             // 60Hz vibration
-            x += Math.round(Math.random() * 2 - 1);
-            y += Math.round(Math.random() * 2 - 1);
+            x += Math.round(Math.random() * VIBRATION_INTENSITY - HALF_VIBRATION);
+            y += Math.round(Math.random() * VIBRATION_INTENSITY - HALF_VIBRATION);
 
             particles[i] = x;
             particles[i + 1] = y;
