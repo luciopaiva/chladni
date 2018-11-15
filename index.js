@@ -1,5 +1,5 @@
 
-const NUM_PARTICLES = 100000;
+const NUM_PARTICLES = 10000;
 const VIBRATION_INTENSITY = 4;
 const HALF_VIBRATION = VIBRATION_INTENSITY / 2;
 
@@ -36,15 +36,17 @@ class Debouncer {
 
 // create canvas
 const canvas = document.createElement("canvas");
+canvas.classList.add("pixelated");
 const c = canvas.getContext("2d");
-let imageData = c.getImageData(0, 0, 1, 1);
+/** @type {ImageData} */
+let imageData = null;
 document.body.appendChild(canvas);
+const canvasScale = 1;
+/** @type {Uint32Array} */
+let buffer = null;
 
-let buffer = new Uint32Array(1);
-let bufferWidth = 1;
-
-let width = window.innerWidth;
-let height = window.innerHeight;
+let width = window.innerWidth / canvasScale;
+let height = window.innerHeight / canvasScale;
 
 const debounceTimer = new Debouncer();
 
@@ -54,18 +56,22 @@ const color = rgbToVal(0xff, 0x94, 0x30);
 function init() {
     const fpsElem = document.getElementById("fps");
     let fpsCount = 0;
-    setInterval(() => { fpsElem.innerText = `${fpsCount}`; fpsCount = 0 }, 1000);
+    const fallingElem = document.getElementById("falling");
+    let fallingCount = 0;
+    setInterval(() => {
+        fpsElem.innerText = `${fpsCount}`; fpsCount = 0;
+        fallingElem.innerText = fallingCount; fallingCount = 0;
+    }, 1000);
 
     // resize canvas to cover whole screen
     function resize() {
-        width = window.innerWidth;
-        height = window.innerHeight;
+        width = Math.ceil(window.innerWidth / canvasScale);
+        height = Math.ceil(window.innerHeight / canvasScale);
         canvas.setAttribute("width", width);
         canvas.setAttribute("height", height);
 
         imageData = c.getImageData(0, 0, width, height);
         buffer = new Uint32Array(imageData.data.buffer);
-        bufferWidth = width;
         console.info(`New buffer created (${width}x${height})`);
 
         for (let i = 0; i < particles.length; i += 2) {
@@ -75,6 +81,11 @@ function init() {
     }
     window.addEventListener("resize", () => debounceTimer.set(resize, 350));
     resize();
+
+    function didParticleFall(x, y) {
+        const SLACK = 100;
+        return x < -SLACK || x >= width + SLACK || y < -SLACK || y >= height + SLACK;
+    }
 
     // animation loop
     function update() {
@@ -94,11 +105,12 @@ function init() {
 
             buffer[Math.round(y) * width + Math.round(x)] = color;
 
+            // ToDo do this check less frequently
             // replace sand if it fell from the plate
-            const SLACK = 100;
-            if (x < -SLACK || x >= width + SLACK || y < -SLACK || y >= height + SLACK) {
+            if (didParticleFall(x, y)) {
                 particles[i] = Math.random() * width;
                 particles[i + 1] = Math.random() * height;
+                fallingCount++;
             }
         }
 
