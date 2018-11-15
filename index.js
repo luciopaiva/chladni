@@ -93,6 +93,13 @@ function init() {
             particles[i + 1] = y;
 
             buffer[Math.round(y) * width + Math.round(x)] = color;
+
+            // replace sand if it fell from the plate
+            const SLACK = 100;
+            if (x < -SLACK || x >= width + SLACK || y < -SLACK || y >= height + SLACK) {
+                particles[i] = Math.random() * width;
+                particles[i + 1] = Math.random() * height;
+            }
         }
 
         c.putImageData(imageData, 0, 0);
