@@ -20,10 +20,6 @@ const rgbToVal = isBigEndian ?
     (r, g, b) => ((r << 24) | (g << 16) | (b << 8) | 0xff) >>> 0:
     (r, g, b) => ((0xff << 24) | (b << 16) | (g << 8) | r) >>> 0;
 
-const valToRGB = isBigEndian ?
-    (val) => [(val >>> 24) & 0xff, (val >>> 16) & 0xff, (val >>> 8)  & 0xff] :
-    (val) => [         val & 0xff, (val >>> 8)  & 0xff, (val >>> 16) & 0xff];
-
 class Debouncer {
     constructor () { this.timer = null; }
     set(task, delay) {
@@ -183,18 +179,6 @@ function init() {
         return [
             gradients[index],
             gradients[index + 1]
-        ];
-    }
-
-    function interpolateGradientAt(x, y) {
-        const baseX = Math.floor(x);
-        const baseY = Math.floor(y);
-        const baseIndex = (baseY * width + baseX) * 2;
-        const lerpX = x % 1;
-        const lerpY = y % 1;
-        return [
-            (gradients[baseIndex] * (1 - lerpX) + gradients[baseIndex + 2] * lerpX) / 2,
-            (gradients[baseIndex + 1] * (1 - lerpY) + gradients[baseIndex + width * 2 + 1] * lerpY) / 2
         ];
     }
 
