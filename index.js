@@ -64,182 +64,190 @@ let gradients = null;
 let width = window.innerWidth / canvasScale;
 let height = window.innerHeight / canvasScale;
 
+let fpsCount = 0;
+let fallingCount = 0;
+
 const debounceTimer = new Debouncer();
 
 const particles = new Float32Array(NUM_PARTICLES * 2);
 const color = cssColorToColor(readCssVarAsHexNumber("particle-color"));
 const backgroundColor = cssColorToColor(readCssVarAsHexNumber("background-color"));
 
-function init() {
+function initStatus() {
     const fpsElem = document.getElementById("fps");
-    let fpsCount = 0;
     const fallingElem = document.getElementById("falling");
-    let fallingCount = 0;
     setInterval(() => {
         fpsElem.innerText = fpsCount.toString(); fpsCount = 0;
         fallingElem.innerText = fallingCount.toString(); fallingCount = 0;
     }, 1000);
+}
 
-    function recalculateGradients() {
-        vibrationValues = new Float32Array(width * height);
-        for (let y = 0; y < height; y++) {
-            for (let x = 0; x < width; x++) {
-                const index = y * width + x;
-                const normX = Math.abs(height - x) / height;
-                const normY = Math.abs(height - y) / height;
-                const M = 4;
-                const N = 5;
-                const L = 1/4;  // empirically adjusted
+// resize canvas to cover whole screen
+function resize() {
+    width = Math.ceil(window.innerWidth / canvasScale);
+    height = Math.ceil(window.innerHeight / canvasScale);
+    canvas.setAttribute("width", width);
+    canvas.setAttribute("height", height);
 
-                // Chladni equation
-                vibrationValues[index] = Math.cos(N * normX * Math.PI / L) * Math.cos(M * normY * Math.PI / L) -
-                    Math.cos(M * normX * Math.PI / L) * Math.cos(N * normY * Math.PI / L);
+    imageData = c.getImageData(0, 0, width, height);
+    buffer = new Uint32Array(imageData.data.buffer);
+    recalculateGradients();
+    console.info(`New buffer created (${width}x${height})`);
 
-                // normalize from [-2..2] to [-1..1]
-                vibrationValues[index] /= 2;
+    for (let i = 0; i < particles.length; i += 2) {
+        particles[i] = Math.random() * width;
+        particles[i + 1] = Math.random() * height;
+    }
+}
 
-                // flip troughs to become crests (values map from [-1..1] to [0..1])
-                vibrationValues[index] *= Math.sign(vibrationValues[index]);
-            }
+function didParticleFall(x, y) {
+    const SLACK = 100;
+    return x < -SLACK || x >= width + SLACK || y < -SLACK || y >= height + SLACK;
+}
+
+function cheapInterpolateGradientAt(x, y) {
+    x = Math.round(x);
+    y = Math.round(y);
+    const index = (y * width + x) * 2;
+    return [
+        gradients[index],
+        gradients[index + 1]
+    ];
+}
+
+function recalculateGradients() {
+    vibrationValues = new Float32Array(width * height);
+    for (let y = 0; y < height; y++) {
+        for (let x = 0; x < width; x++) {
+            const index = y * width + x;
+            const normX = Math.abs(height - x) / height;
+            const normY = Math.abs(height - y) / height;
+            const M = 4;
+            const N = 5;
+            const L = 1/4;  // empirically adjusted
+
+            // Chladni equation
+            vibrationValues[index] = Math.cos(N * normX * Math.PI / L) * Math.cos(M * normY * Math.PI / L) -
+                Math.cos(M * normX * Math.PI / L) * Math.cos(N * normY * Math.PI / L);
+
+            // normalize from [-2..2] to [-1..1]
+            vibrationValues[index] /= 2;
+
+            // flip troughs to become crests (values map from [-1..1] to [0..1])
+            vibrationValues[index] *= Math.sign(vibrationValues[index]);
         }
+    }
 
-        // Now that the vibration magnitude of each point in the plate was calculated, we can calculate gradients.
-        // Particles are looking for nodal points (where vibration magnitude is zero), so gradients must point towards
-        // the neighbor with lowest vibration.
+    // Now that the vibration magnitude of each point in the plate was calculated, we can calculate gradients.
+    // Particles are looking for nodal points (where vibration magnitude is zero), so gradients must point towards
+    // the neighbor with lowest vibration.
 
-        gradients = new Float32Array(width * height * 2);  // times 2 to contain x and y values for each point
-        gradients.fill(0);  // borders will have null gradient
-        for (let y = 1; y < height - 1; y++) {
-            for (let x = 1; x < width - 1; x++) {
-                const myIndex = y * width + x;
-                const myVibration = vibrationValues[myIndex];
-                if (myVibration < MIN_NODE_THRESHOLD) {
-                    // we are already at a node position, so gradient is zero
-                    gradients[myIndex * 2] = 0;
-                    gradients[myIndex * 2 + 1] = 0;
-                    continue;
-                }
+    gradients = new Float32Array(width * height * 2);  // times 2 to contain x and y values for each point
+    gradients.fill(0);  // borders will have null gradient
+    for (let y = 1; y < height - 1; y++) {
+        for (let x = 1; x < width - 1; x++) {
+            const myIndex = y * width + x;
+            const myVibration = vibrationValues[myIndex];
+            if (myVibration < MIN_NODE_THRESHOLD) {
+                // we are already at a node position, so gradient is zero
+                gradients[myIndex * 2] = 0;
+                gradients[myIndex * 2 + 1] = 0;
+                continue;
+            }
 
-                let candidateGradients = [];
-                candidateGradients.push([0, 0]);
+            let candidateGradients = [];
+            candidateGradients.push([0, 0]);
 
-                let minVibrationSoFar = Number.POSITIVE_INFINITY;
-                for (let ny = -1; ny <= 1; ny++) {
-                    for (let nx = -1; nx <= 1; nx++) {
-                        if (nx === 0 && ny === 0) {
-                            continue;  // ourselves!
+            let minVibrationSoFar = Number.POSITIVE_INFINITY;
+            for (let ny = -1; ny <= 1; ny++) {
+                for (let nx = -1; nx <= 1; nx++) {
+                    if (nx === 0 && ny === 0) {
+                        continue;  // ourselves!
+                    }
+
+                    const ni = (y + ny) * width + (x + nx);
+                    const nv = vibrationValues[ni];
+
+                    // if neighbor has *same* vibration as minimum so far, consider it as well to avoid biasing
+                    if (nv <= minVibrationSoFar) {
+                        const len = Math.hypot(nx, ny);
+                        const gx = nx / len;
+                        const gy = ny / len;
+                        if (isNaN(gx) || isNaN(gy)) {
+                            debugger;
                         }
-
-                        const ni = (y + ny) * width + (x + nx);
-                        const nv = vibrationValues[ni];
-
-                        // if neighbor has *same* vibration as minimum so far, consider it as well to avoid biasing
-                        if (nv <= minVibrationSoFar) {
-                            const len = Math.hypot(nx, ny);
-                            const gx = nx / len;
-                            const gy = ny / len;
-                            if (isNaN(gx) || isNaN(gy)) {
-                                debugger;
-                            }
-                            if (nv < minVibrationSoFar) {
-                                minVibrationSoFar = nv;
-                                candidateGradients = [];
-                            }
-                            candidateGradients.push([gx, gy]);
+                        if (nv < minVibrationSoFar) {
+                            minVibrationSoFar = nv;
+                            candidateGradients = [];
                         }
+                        candidateGradients.push([gx, gy]);
                     }
                 }
-
-                const index = (y * width + x) * 2;
-                // choose randomly to avoid biasing
-                const chosenGradient = candidateGradients[Math.floor(Math.random() * candidateGradients.length)];
-
-                gradients[index] = chosenGradient[0];
-                gradients[index + 1] = chosenGradient[1];
             }
+
+            const index = (y * width + x) * 2;
+            // choose randomly to avoid biasing
+            const chosenGradient = candidateGradients[Math.floor(Math.random() * candidateGradients.length)];
+
+            gradients[index] = chosenGradient[0];
+            gradients[index + 1] = chosenGradient[1];
+        }
+    }
+}
+
+// animation loop
+function update() {
+    buffer.fill(backgroundColor);
+
+    if (DEBUG_VIBRATION_LEVELS) {
+        const MAX_LUMINOSITY = 32;  // up to 256
+        for (let i = 0; i < vibrationValues.length; i++) {
+            const intensity = vibrationValues[i] * MAX_LUMINOSITY;
+            buffer[i] = rgbToVal(intensity, intensity, intensity);
         }
     }
 
-    // resize canvas to cover whole screen
-    function resize() {
-        width = Math.ceil(window.innerWidth / canvasScale);
-        height = Math.ceil(window.innerHeight / canvasScale);
-        canvas.setAttribute("width", width);
-        canvas.setAttribute("height", height);
+    for (let i = 0; i < particles.length; i += 2) {
+        let x = particles[i];
+        let y = particles[i + 1];
 
-        imageData = c.getImageData(0, 0, width, height);
-        buffer = new Uint32Array(imageData.data.buffer);
-        recalculateGradients();
-        console.info(`New buffer created (${width}x${height})`);
+        const [gradX, gradY] = cheapInterpolateGradientAt(x, y);
 
-        for (let i = 0; i < particles.length; i += 2) {
+        // movement towards gradient
+        x += MAX_GRADIENT_INTENSITY * gradX;
+        y += MAX_GRADIENT_INTENSITY * gradY;
+
+        // random vibration
+        x += (Math.random() * MAX_RANDOM_VIBRATION_INTENSITY - HALF_MAX_RANDOM_VIBRATION_INTENSITY);
+        y += (Math.random() * MAX_RANDOM_VIBRATION_INTENSITY - HALF_MAX_RANDOM_VIBRATION_INTENSITY);
+
+        particles[i] = x;
+        particles[i + 1] = y;
+
+        buffer[Math.round(y) * width + Math.round(x)] = color;
+
+        // ToDo do this check less frequently
+        // replace sand if it fell from the plate
+        if (didParticleFall(x, y)) {
             particles[i] = Math.random() * width;
             particles[i + 1] = Math.random() * height;
+            fallingCount++;
         }
     }
+
+    c.putImageData(imageData, 0, 0);
+
+    fpsCount++;
+    requestAnimationFrame(update);
+}
+
+function init() {
+    initStatus();
+
     window.addEventListener("resize", () => debounceTimer.set(resize, 350));
     resize();
 
-    function didParticleFall(x, y) {
-        const SLACK = 100;
-        return x < -SLACK || x >= width + SLACK || y < -SLACK || y >= height + SLACK;
-    }
-
-    function cheapInterpolateGradientAt(x, y) {
-        x = Math.round(x);
-        y = Math.round(y);
-        const index = (y * width + x) * 2;
-        return [
-            gradients[index],
-            gradients[index + 1]
-        ];
-    }
-
-    // animation loop
-    function update() {
-        buffer.fill(backgroundColor);
-
-        if (DEBUG_VIBRATION_LEVELS) {
-            const MAX_LUMINOSITY = 32;  // up to 256
-            for (let i = 0; i < vibrationValues.length; i++) {
-                const intensity = vibrationValues[i] * MAX_LUMINOSITY;
-                buffer[i] = rgbToVal(intensity, intensity, intensity);
-            }
-        }
-
-        for (let i = 0; i < particles.length; i += 2) {
-            let x = particles[i];
-            let y = particles[i + 1];
-
-            const [gradX, gradY] = cheapInterpolateGradientAt(x, y);
-
-            // movement towards gradient
-            x += MAX_GRADIENT_INTENSITY * gradX;
-            y += MAX_GRADIENT_INTENSITY * gradY;
-
-            // random vibration
-            x += (Math.random() * MAX_RANDOM_VIBRATION_INTENSITY - HALF_MAX_RANDOM_VIBRATION_INTENSITY);
-            y += (Math.random() * MAX_RANDOM_VIBRATION_INTENSITY - HALF_MAX_RANDOM_VIBRATION_INTENSITY);
-
-            particles[i] = x;
-            particles[i + 1] = y;
-
-            buffer[Math.round(y) * width + Math.round(x)] = color;
-
-            // ToDo do this check less frequently
-            // replace sand if it fell from the plate
-            if (didParticleFall(x, y)) {
-                particles[i] = Math.random() * width;
-                particles[i + 1] = Math.random() * height;
-                fallingCount++;
-            }
-        }
-
-        c.putImageData(imageData, 0, 0);
-
-        fpsCount++;
-        requestAnimationFrame(update);
-    }
     update(performance.now());
 }
+
 init();
