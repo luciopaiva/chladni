@@ -1,6 +1,6 @@
 
 const NUM_PARTICLES = 100000;
-const VIBRATION_INTENSITY = 2;
+const VIBRATION_INTENSITY = 4;
 const HALF_VIBRATION = VIBRATION_INTENSITY / 2;
 
 /**
@@ -48,7 +48,7 @@ let height = window.innerHeight;
 
 const debounceTimer = new Debouncer();
 
-const particles = new Uint16Array(NUM_PARTICLES * 2);
+const particles = new Float32Array(NUM_PARTICLES * 2);
 const color = rgbToVal(0xff, 0x94, 0x30);
 
 function init() {
@@ -69,8 +69,8 @@ function init() {
         console.info(`New buffer created (${width}x${height})`);
 
         for (let i = 0; i < particles.length; i += 2) {
-            particles[i] = Math.random() * width | 0;
-            particles[i + 1] = Math.random() * height | 0;
+            particles[i] = Math.random() * width;
+            particles[i + 1] = Math.random() * height;
         }
     }
     window.addEventListener("resize", () => debounceTimer.set(resize, 350));
@@ -86,13 +86,13 @@ function init() {
             let y = particles[i + 1];
 
             // 60Hz vibration
-            x += Math.round(Math.random() * VIBRATION_INTENSITY - HALF_VIBRATION);
-            y += Math.round(Math.random() * VIBRATION_INTENSITY - HALF_VIBRATION);
+            x += Math.random() * VIBRATION_INTENSITY - HALF_VIBRATION;
+            y += Math.random() * VIBRATION_INTENSITY - HALF_VIBRATION;
 
             particles[i] = x;
             particles[i + 1] = y;
 
-            buffer[y * width + x] = color;
+            buffer[Math.round(y) * width + Math.round(x)] = color;
         }
 
         c.putImageData(imageData, 0, 0);
