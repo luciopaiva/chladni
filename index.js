@@ -51,13 +51,6 @@ const debounceTimer = new Debouncer();
 const particles = new Uint16Array(NUM_PARTICLES * 2);
 const color = rgbToVal(0xff, 0x94, 0x30);
 
-function recreateBuffer() {
-    imageData = c.getImageData(0, 0, width, height);
-    buffer = new Uint32Array(imageData.data.buffer);
-    bufferWidth = width;
-    console.info(`New buffer created (${width}x${height})`);
-}
-
 function init() {
     const fpsElem = document.getElementById("fps");
     let fpsCount = 0;
@@ -70,15 +63,18 @@ function init() {
         canvas.setAttribute("width", width);
         canvas.setAttribute("height", height);
 
-        debounceTimer.set(recreateBuffer, 350);
-    }
-    window.addEventListener("resize", resize);
-    resize();
+        imageData = c.getImageData(0, 0, width, height);
+        buffer = new Uint32Array(imageData.data.buffer);
+        bufferWidth = width;
+        console.info(`New buffer created (${width}x${height})`);
 
-    for (let i = 0; i < particles.length; i += 2) {
-        particles[i] = Math.random() * width | 0;
-        particles[i + 1] = Math.random() * height | 0;
+        for (let i = 0; i < particles.length; i += 2) {
+            particles[i] = Math.random() * width | 0;
+            particles[i + 1] = Math.random() * height | 0;
+        }
     }
+    window.addEventListener("resize", () => debounceTimer.set(resize, 350));
+    resize();
 
     // animation loop
     function update() {
