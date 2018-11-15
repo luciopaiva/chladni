@@ -85,8 +85,16 @@ function init() {
         buffer.fill(0);
 
         for (let i = 0; i < particles.length; i += 2) {
-            const x = particles[i];
-            const y = particles[i + 1];
+            let x = particles[i];
+            let y = particles[i + 1];
+
+            // 60Hz vibration
+            x += Math.round(Math.random() * 2 - 1);
+            y += Math.round(Math.random() * 2 - 1);
+
+            particles[i] = x;
+            particles[i + 1] = y;
+
             buffer[y * width + x] = color;
         }
 
