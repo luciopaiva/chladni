@@ -4,6 +4,7 @@ const MAX_GRADIENT_INTENSITY = 1/4;
 const MAX_RANDOM_VIBRATION_INTENSITY = 2;
 const HALF_MAX_RANDOM_VIBRATION_INTENSITY = MAX_RANDOM_VIBRATION_INTENSITY / 2;
 const MIN_NODE_THRESHOLD = 1e-2;
+const DEBUG_VIBRATION_LEVELS = false;
 
 /**
  * https://stackoverflow.com/a/52827031/778272
@@ -185,12 +186,13 @@ function init() {
     function update() {
         buffer.fill(backgroundColor);
 
-        // // debug gradients
-        // const LUMINOSITY = 64;  // up to 256
-        // for (let i = 0; i < vibrationValues.length; i++) {
-        //     const intensity = vibrationValues[i] * LUMINOSITY;
-        //     buffer[i] = rgbToVal(intensity, intensity, intensity);
-        // }
+        if (DEBUG_VIBRATION_LEVELS) {
+            const MAX_LUMINOSITY = 32;  // up to 256
+            for (let i = 0; i < vibrationValues.length; i++) {
+                const intensity = vibrationValues[i] * MAX_LUMINOSITY;
+                buffer[i] = rgbToVal(intensity, intensity, intensity);
+            }
+        }
 
         for (let i = 0; i < particles.length; i += 2) {
             let x = particles[i];
