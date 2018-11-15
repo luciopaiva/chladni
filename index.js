@@ -1,6 +1,6 @@
 
 const NUM_PARTICLES = 40000;
-const MAX_GRADIENT_INTENSITY = 1/4;
+const MAX_GRADIENT_INTENSITY = .2;
 const MAX_RANDOM_VIBRATION_INTENSITY = 2;
 const HALF_MAX_RANDOM_VIBRATION_INTENSITY = MAX_RANDOM_VIBRATION_INTENSITY / 2;
 const MIN_NODE_THRESHOLD = 1e-2;
@@ -19,6 +19,19 @@ console.info("Endianness: " + (isBigEndian ? "big" : "little"));
 const rgbToVal = isBigEndian ?
     (r, g, b) => ((r << 24) | (g << 16) | (b << 8) | 0xff) >>> 0:
     (r, g, b) => ((0xff << 24) | (b << 16) | (g << 8) | r) >>> 0;
+
+function readCssVar(varName) {
+    varName = varName.startsWith("--") ? varName : "--" + varName;
+    return window.getComputedStyle(document.documentElement).getPropertyValue(varName);
+}
+
+function readCssVarAsHexNumber(varName) {
+    return parseInt(readCssVar(varName).replace(/[^a-fA-F0-9]/g, ""), 16);
+}
+
+function cssColorToColor(cssColor) {
+    return rgbToVal(cssColor >>> 16 & 0xff, cssColor >>> 8 & 0xff, cssColor & 0xff);
+}
 
 class Debouncer {
     constructor () { this.timer = null; }
@@ -54,8 +67,8 @@ let height = window.innerHeight / canvasScale;
 const debounceTimer = new Debouncer();
 
 const particles = new Float32Array(NUM_PARTICLES * 2);
-const color = rgbToVal(0xff, 0x94, 0x30);
-const backgroundColor = rgbToVal(0, 0, 0);
+const color = cssColorToColor(readCssVarAsHexNumber("particle-color"));
+const backgroundColor = cssColorToColor(readCssVarAsHexNumber("background-color"));
 
 function init() {
     const fpsElem = document.getElementById("fps");
