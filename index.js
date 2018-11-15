@@ -105,7 +105,8 @@ function didParticleFall(x, y) {
     return x < -SLACK || x >= width + SLACK || y < -SLACK || y >= height + SLACK;
 }
 
-function cheapInterpolateGradientAt(x, y) {
+function obtainGradientAt(x, y) {
+    // used to lerp nearest gradient grid corners here, but it's too expensive and doesn't make any visual difference
     x = Math.round(x);
     y = Math.round(y);
     const index = (y * width + x) * 2;
@@ -211,9 +212,9 @@ function update() {
         let x = particles[i];
         let y = particles[i + 1];
 
-        const [gradX, gradY] = cheapInterpolateGradientAt(x, y);
+        const [gradX, gradY] = obtainGradientAt(x, y);
 
-        // movement towards gradient
+        // descend gradient
         x += MAX_GRADIENT_INTENSITY * gradX;
         y += MAX_GRADIENT_INTENSITY * gradY;
 
