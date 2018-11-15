@@ -59,8 +59,8 @@ function init() {
     const fallingElem = document.getElementById("falling");
     let fallingCount = 0;
     setInterval(() => {
-        fpsElem.innerText = `${fpsCount}`; fpsCount = 0;
-        fallingElem.innerText = fallingCount; fallingCount = 0;
+        fpsElem.innerText = fpsCount.toString(); fpsCount = 0;
+        fallingElem.innerText = fallingCount.toString(); fallingCount = 0;
     }, 1000);
 
     // resize canvas to cover whole screen
