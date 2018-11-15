@@ -1,8 +1,8 @@
 
 const NUM_PARTICLES = 40000;
-const MAX_GRADIENT_INTENSITY = .2;
-const MAX_RANDOM_VIBRATION_INTENSITY = 2;
-const HALF_MAX_RANDOM_VIBRATION_INTENSITY = MAX_RANDOM_VIBRATION_INTENSITY / 2;
+const MAX_GRADIENT_INTENSITY = .4;
+const MODERATE_RANDOM_VIBRATION_INTENSITY = 2;
+const AGGRESSIVE_RANDOM_VIBRATION_INTENSITY = MODERATE_RANDOM_VIBRATION_INTENSITY * 1.5;
 const MIN_NODE_THRESHOLD = 1e-2;
 const DEBUG_VIBRATION_LEVELS = false;
 
@@ -60,6 +60,8 @@ let buffer = null;
 let vibrationValues = null;
 /** @type {Float32Array} */
 let gradients = null;
+let vibrationIntensity = MODERATE_RANDOM_VIBRATION_INTENSITY;
+let halfVibrationIntensity = vibrationIntensity / 2;
 
 let width = window.innerWidth / canvasScale;
 let height = window.innerHeight / canvasScale;
@@ -116,16 +118,46 @@ function obtainGradientAt(x, y) {
     ];
 }
 
-function recalculateGradients() {
+const L = 1/4;
+const L2 = 1/2;
+// good frequency configurations [M, N, L] (L was empirically determined)
+const gradientParameters = [
+    [1, 2, L2, true],
+    [1, 1, L, false],
+    [1, 3, L, true],
+    [1, 1, L, false],
+    [1, 4, L2, true],
+    [1, 1, L, false],
+    [1, 5, L, true],
+    [1, 1, L, false],
+    [2, 3, L2, true],
+    [1, 1, L, false],
+    [2, 5, L, true],
+    [1, 1, L, false],
+    [3, 4, L2, true],
+    [1, 1, L, false],
+    [3, 5, L, true],
+    [1, 1, L, false],
+    [4, 5, L2, true],
+    [1, 1, L, false],
+];
+let gradientParametersIndex = 0;
+
+setInterval(() => {
+    const [M, N, L, isResonant] = gradientParameters[gradientParametersIndex];
+    vibrationIntensity = isResonant ? MODERATE_RANDOM_VIBRATION_INTENSITY : AGGRESSIVE_RANDOM_VIBRATION_INTENSITY * 4;
+    halfVibrationIntensity = vibrationIntensity / 2;
+    recalculateGradients(M, N, L);
+    gradientParametersIndex = (gradientParametersIndex + 1) % gradientParameters.length;
+}, 4000);
+
+function recalculateGradients(M = 1, N = 1, L = 1) {
     vibrationValues = new Float32Array(width * height);
     for (let y = 0; y < height; y++) {
         for (let x = 0; x < width; x++) {
             const index = y * width + x;
             const normX = Math.abs(height - x) / height;
             const normY = Math.abs(height - y) / height;
-            const M = 4;
-            const N = 5;
-            const L = 1/4;  // empirically adjusted
 
             // Chladni equation
             vibrationValues[index] = Math.cos(N * normX * Math.PI / L) * Math.cos(M * normY * Math.PI / L) -
@@ -219,8 +251,8 @@ function update() {
         y += MAX_GRADIENT_INTENSITY * gradY;
 
         // random vibration
-        x += (Math.random() * MAX_RANDOM_VIBRATION_INTENSITY - HALF_MAX_RANDOM_VIBRATION_INTENSITY);
-        y += (Math.random() * MAX_RANDOM_VIBRATION_INTENSITY - HALF_MAX_RANDOM_VIBRATION_INTENSITY);
+        x += (Math.random() * vibrationIntensity - halfVibrationIntensity);
+        y += (Math.random() * vibrationIntensity - halfVibrationIntensity);
 
         particles[i] = x;
         particles[i + 1] = y;
