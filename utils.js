@@ -19,7 +19,8 @@ function readCssVar(varName) {
 }
 
 function readCssVarAsHexNumber(varName) {
-    return parseInt(readCssVar(varName).replace(/[^a-fA-F0-9]/g, ""), 16);
+    const strValue = readCssVar(varName);
+    return strValue ? parseInt(strValue.replace(/[^a-fA-F0-9]/g, ""), 16) : null;
 }
 
 function cssColorToColor(cssColor) {

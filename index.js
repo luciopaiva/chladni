@@ -39,7 +39,19 @@ class ChladniApp {
         const debounceTimer = new Debouncer();
 
         this.particles = new Float32Array(NUM_PARTICLES * 2);
-        this.color = Utils.cssColorToColor(Utils.readCssVarAsHexNumber("particle-color"));
+
+        this.nonResonantColor = Utils.cssColorToColor(Utils.readCssVarAsHexNumber("non-resonant-color"));
+        this.colorIndex = 0;
+        this.colors = [];
+        let cssColorIndex = 1;
+        let cssColor;
+        while (cssColor = Utils.readCssVarAsHexNumber("particle-color-" + cssColorIndex)) {
+            this.colors.push(Utils.cssColorToColor(cssColor));
+            cssColorIndex++;
+        }
+        console.info(this.colors);
+        this.selectedColor = this.colors[this.colorIndex];
+
         this.backgroundColor = Utils.cssColorToColor(Utils.readCssVarAsHexNumber("background-color"));
 
         this.initStatus();
@@ -91,6 +103,10 @@ class ChladniApp {
         this.halfVibrationIntensity = this.vibrationIntensity / 2;
         this.vibrationValues = message.data.vibrationValues ? new Float32Array(message.data.vibrationValues) : null;
         this.gradients = message.data.gradients ? new Float32Array(message.data.gradients) : null;
+        if (this.gradients) {
+            this.colorIndex = (this.colorIndex + 1) % this.colors.length;
+            this.selectedColor = this.colors[this.colorIndex];
+        }
     }
 
     didParticleFall(x, y) {
@@ -120,6 +136,8 @@ class ChladniApp {
             }
         }
 
+        const color = this.gradients ? this.selectedColor : this.nonResonantColor;
+
         for (let i = 0; i < this.particles.length; i += 2) {
             let x = this.particles[i];
             let y = this.particles[i + 1];
@@ -139,7 +157,7 @@ class ChladniApp {
             this.particles[i] = x;
             this.particles[i + 1] = y;
 
-            this.buffer[Math.round(y) * this.width + Math.round(x)] = this.color;
+            this.buffer[Math.round(y) * this.width + Math.round(x)] = color;
 
             // ToDo do this check less frequently
             // replace sand if it fell from the plate
