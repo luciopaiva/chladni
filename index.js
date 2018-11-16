@@ -30,6 +30,8 @@ class ChladniApp {
         this.vibrationIntensity = DEFAULT_RANDOM_VIBRATION_INTENSITY;
         this.halfVibrationIntensity = this.vibrationIntensity / 2;
 
+        this.debugVibration = DEBUG_VIBRATION_LEVELS;
+
         this.width = window.innerWidth / CANVAS_SCALE;
         this.height = window.innerHeight / CANVAS_SCALE;
 
@@ -64,6 +66,8 @@ class ChladniApp {
         this.update(performance.now());
 
         setInterval(this.checkForFallenParticles.bind(this), 10000);
+
+        window.addEventListener("keypress", this.keypress.bind(this));
     }
 
     initStatus() {
@@ -71,6 +75,12 @@ class ChladniApp {
         setInterval(() => {
             this.fpsElem.innerText = this.fpsCount.toString(); this.fpsCount = 0;
         }, 1000);
+    }
+
+    keypress(event) {
+        switch (event.key) {
+            case "d": this.debugVibration = !this.debugVibration;
+        }
     }
 
     resize() {
@@ -136,14 +146,14 @@ class ChladniApp {
     }
 
     update() {
-        this.buffer.fill(this.backgroundColor);
-
-        if (DEBUG_VIBRATION_LEVELS && this.vibrationValues) {
-            const MAX_LUMINOSITY = 32;  // up to 256
+        if (this.debugVibration && this.vibrationValues) {
+            const MAX_LUMINOSITY = 64;  // up to 256
             for (let i = 0; i < this.vibrationValues.length; i++) {
                 const intensity = this.vibrationValues[i] * MAX_LUMINOSITY;
                 this.buffer[i] = Utils.rgbToVal(intensity, intensity, intensity);
             }
+        } else {
+            this.buffer.fill(this.backgroundColor);
         }
 
         const color = this.gradients ? this.selectedColor : this.nonResonantColor;
