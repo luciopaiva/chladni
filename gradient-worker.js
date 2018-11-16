@@ -2,10 +2,11 @@
 const MODERATE_RANDOM_VIBRATION_INTENSITY = 3;
 const AGGRESSIVE_RANDOM_VIBRATION_INTENSITY = MODERATE_RANDOM_VIBRATION_INTENSITY * 1.5;
 const MIN_NODE_THRESHOLD = 1e-2;
+const GRADIENT_RENEWAL_PERIOD_IN_MS = 2200;
 
-const L1 = 1/8;
-const L2 = 1/4;
-const L3 = 1/3;
+const L1 = 0.04;
+const L2 = 0.02;
+const L3 = 0.018;
 
 class ChladniParams {
     constructor (m, n, l) {
@@ -17,14 +18,14 @@ class ChladniParams {
 
 const CHLADNI_PARAMS = [
     new ChladniParams(1, 2, L1),
-    new ChladniParams(1, 3, L2),
-    new ChladniParams(1, 4, L3),
+    new ChladniParams(1, 3, L3),
+    new ChladniParams(1, 4, L2),
     new ChladniParams(1, 5, L2),
-    new ChladniParams(2, 3, L3),
+    new ChladniParams(2, 3, L2),
     new ChladniParams(2, 5, L2),
-    new ChladniParams(3, 4, L3),
+    new ChladniParams(3, 4, L2),
     new ChladniParams(3, 5, L2),
-    new ChladniParams(4, 5, L3),
+    new ChladniParams(4, 5, L2),
 ];
 
 class GradientWorker {
@@ -52,7 +53,7 @@ class GradientWorker {
 
         this.isResonantRound = true;
         this.bakeNextGradients();
-        this.bakingTimer = setInterval(this.bakeNextGradients.bind(this), 3000);
+        this.bakingTimer = setInterval(this.bakeNextGradients.bind(this), GRADIENT_RENEWAL_PERIOD_IN_MS);
     }
 
     /**
@@ -66,9 +67,8 @@ class GradientWorker {
         this.vibrationValues = new Float32Array(this.width * this.height);
         for (let y = 0; y < this.height; y++) {
             for (let x = 0; x < this.width; x++) {
-                const index = y * this.width + x;
-                const scaledX = x / this.height * Math.PI / L;
-                const scaledY = y / this.height * Math.PI / L;
+                const scaledX = x * L;
+                const scaledY = y * L;
                 const MX = M * scaledX;
                 const NX = N * scaledX;
                 const MY = M * scaledY;
@@ -83,6 +83,7 @@ class GradientWorker {
                 // flip troughs to become crests (values map from [-1..1] to [0..1])
                 value *= Math.sign(value);
 
+                const index = y * this.width + x;
                 this.vibrationValues[index] = value;
             }
         }
