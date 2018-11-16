@@ -67,18 +67,21 @@ class GradientWorker {
         for (let y = 0; y < this.height; y++) {
             for (let x = 0; x < this.width; x++) {
                 const index = y * this.width + x;
-                const normX = Math.abs(this.height - x) / this.height;
-                const normY = Math.abs(this.height - y) / this.height;
+                const normX = x / this.height;
+                const normY = y / this.height;
 
                 // Chladni equation
-                this.vibrationValues[index] = Math.cos(N * normX * Math.PI / L) * Math.cos(M * normY * Math.PI / L) -
+                let value =
+                    Math.cos(N * normX * Math.PI / L) * Math.cos(M * normY * Math.PI / L) -
                     Math.cos(M * normX * Math.PI / L) * Math.cos(N * normY * Math.PI / L);
 
                 // normalize from [-2..2] to [-1..1]
-                this.vibrationValues[index] /= 2;
+                value /= 2;
 
                 // flip troughs to become crests (values map from [-1..1] to [0..1])
-                this.vibrationValues[index] *= Math.sign(this.vibrationValues[index]);
+                value *= Math.sign(value);
+
+                this.vibrationValues[index] = value;
             }
         }
     }
@@ -90,8 +93,9 @@ class GradientWorker {
             for (let x = 1; x < this.width - 1; x++) {
                 const myIndex = y * this.width + x;
                 const myVibration = this.vibrationValues[myIndex];
+
                 if (myVibration < MIN_NODE_THRESHOLD) {
-                    // we are already at a node position, so gradient is zero
+                    // consider this a nodal position - just set gradient to zero
                     this.gradients[myIndex * 2] = 0;
                     this.gradients[myIndex * 2 + 1] = 0;
                     continue;
@@ -137,12 +141,18 @@ class GradientWorker {
 
     recalculateGradients(chladniParams) {
 
+        let elapsed = performance.now();
         this.computeVibrationValues(chladniParams);
+        elapsed = performance.now() - elapsed;
+        console.info(`Vibration elapsed: ${elapsed.toFixed(0)}ms`);
 
         // Now that the vibration magnitude of each point in the plate was calculated, we can calculate gradients.
         // Particles are looking for nodal points (where vibration magnitude is zero), so gradients must point towards
         // the neighbor with lowest vibration.
+        elapsed = performance.now();
         this.computeGradients();
+        elapsed = performance.now() - elapsed;
+        console.info(`Gradients elapsed: ${elapsed.toFixed(0)}ms`);
     }
 
     bakeNextGradients() {
