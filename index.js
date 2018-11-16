@@ -79,8 +79,8 @@ class ChladniApp {
 
     keypress(event) {
         switch (event.key) {
-            case "d": this.debugVibration = !this.debugVibration;
-            case " ": this.isRunning = !this.isRunning;
+            case "d": this.debugVibration = !this.debugVibration; break;
+            case " ": this.isRunning = !this.isRunning; break;
         }
     }
 
