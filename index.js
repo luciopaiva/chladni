@@ -31,6 +31,7 @@ class ChladniApp {
         this.halfVibrationIntensity = this.vibrationIntensity / 2;
 
         this.debugVibration = DEBUG_VIBRATION_LEVELS;
+        this.isRunning = true;
 
         this.width = window.innerWidth / CANVAS_SCALE;
         this.height = window.innerHeight / CANVAS_SCALE;
@@ -79,6 +80,7 @@ class ChladniApp {
     keypress(event) {
         switch (event.key) {
             case "d": this.debugVibration = !this.debugVibration;
+            case " ": this.isRunning = !this.isRunning;
         }
     }
 
@@ -144,6 +146,12 @@ class ChladniApp {
     }
 
     update() {
+        if (!this.isRunning) {
+            this.fpsCount++;
+            requestAnimationFrame(this.updateFn);
+            return;
+        }
+
         if (this.debugVibration && this.vibrationValues) {
             const MAX_LUMINOSITY = 64;  // up to 256
             for (let i = 0; i < this.vibrationValues.length; i++) {
