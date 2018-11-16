@@ -38,11 +38,13 @@ class GradientWorker {
         this.height = message.data.height;
         console.info(`Message from main thread: width=${this.width}, height=${this.height}`);
 
-        this.bakeNextGradients();
-
-        if (!this.bakingTimer) {
-            this.bakingTimer = setInterval(this.bakeNextGradients.bind(this), 3000);
+        if (this.bakingTimer) {
+            clearInterval(this.bakingTimer);
         }
+
+        this.isResonantRound = true;
+        this.bakeNextGradients();
+        this.bakingTimer = setInterval(this.bakeNextGradients.bind(this), 3000);
     }
 
     computeVibrationValues(M, N, L) {
