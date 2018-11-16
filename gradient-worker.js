@@ -69,6 +69,7 @@ class GradientWorker {
             for (let x = 0; x < this.width; x++) {
                 const scaledX = x * L;
                 const scaledY = y * L;
+                // ToDo when scaledX|scaledY > TAU, the pattern repeats - compute it once and just copy it for the rest
                 const MX = M * scaledX;
                 const NX = N * scaledX;
                 const MY = M * scaledY;
@@ -91,16 +92,17 @@ class GradientWorker {
 
     computeGradients() {
         this.gradients = new Float32Array(this.width * this.height * 2);  // times 2 to store x,y values for each point
-        this.gradients.fill(0);  // borders will have null gradient (to simplify both loops below)
+        // skip borders - just let their gradients be zero and avoid boundary checks below
         for (let y = 1; y < this.height - 1; y++) {
             for (let x = 1; x < this.width - 1; x++) {
                 const myIndex = y * this.width + x;
+                const gradientIndex = myIndex << 1;
                 const myVibration = this.vibrationValues[myIndex];
 
                 if (myVibration < MIN_NODE_THRESHOLD) {
                     // consider this a nodal position - just set gradient to zero
-                    this.gradients[myIndex * 2] = 0;
-                    this.gradients[myIndex * 2 + 1] = 0;
+                    this.gradients[gradientIndex] = 0;
+                    this.gradients[gradientIndex + 1] = 0;
                     continue;
                 }
 
@@ -119,25 +121,22 @@ class GradientWorker {
 
                         // if neighbor has *same* vibration as minimum so far, consider it as well to avoid biasing
                         if (nv <= minVibrationSoFar) {
-                            // intentionally not normalizing by length here (very expensive and useless)
-                            const gx = nx;
-                            const gy = ny;
+                            // intentionally not normalizing by length here (very expensive *and* useless)
 
                             if (nv < minVibrationSoFar) {
                                 minVibrationSoFar = nv;
                                 candidateGradients = [];
                             }
-                            candidateGradients.push([gx, gy]);
+                            candidateGradients.push([nx, ny]);
                         }
                     }
                 }
 
-                const index = (y * this.width + x) * 2;
                 const chosenGradient = candidateGradients.length === 1 ? candidateGradients[0] :
                     candidateGradients[Math.floor(Math.random() * candidateGradients.length)];  // to avoid biasing
 
-                this.gradients[index] = chosenGradient[0];
-                this.gradients[index + 1] = chosenGradient[1];
+                this.gradients[gradientIndex] = chosenGradient[0];
+                this.gradients[gradientIndex + 1] = chosenGradient[1];
             }
         }
     }
