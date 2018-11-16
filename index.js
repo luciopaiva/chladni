@@ -2,11 +2,11 @@
 import * as Utils from "./utils.js";
 import {Debouncer} from "./utils.js";
 
-const NUM_PARTICLES = 40000;
+const NUM_PARTICLES = 30000;
 const DEFAULT_RANDOM_VIBRATION_INTENSITY = 2;
 const MAX_GRADIENT_INTENSITY = .4;
 const DEBUG_VIBRATION_LEVELS = false;
-const CANVAS_SCALE = 2;
+const CANVAS_SCALE = 1.5;
 
 
 class ChladniApp {
@@ -48,7 +48,6 @@ class ChladniApp {
             this.colors.push(Utils.cssColorToColor(cssColor));
             cssColorIndex++;
         }
-        console.info(this.colors);
         this.selectedColor = this.colors[this.colorIndex];
 
         this.backgroundColor = Utils.cssColorToColor(Utils.readCssVarAsHexNumber("background-color"));
@@ -106,7 +105,6 @@ class ChladniApp {
     }
 
     onMessageFromWorker(message) {
-        console.info("Message from worker");
         this.vibrationIntensity = message.data.vibrationIntensity;
         this.halfVibrationIntensity = this.vibrationIntensity / 2;
         this.vibrationValues = message.data.vibrationValues ? new Float32Array(message.data.vibrationValues) : null;

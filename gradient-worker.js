@@ -147,31 +147,31 @@ class GradientWorker {
 
     recalculateGradients(chladniParams) {
 
-        let elapsed = performance.now();
+        let start = performance.now();
         this.computeVibrationValues(chladniParams);
-        elapsed = performance.now() - elapsed;
-        console.info(`Vibration elapsed: ${elapsed.toFixed(0)}ms`);
+        let elapsedVibration = performance.now() - start;
 
         // Now that the vibration magnitude of each point in the plate was calculated, we can calculate gradients.
         // Particles are looking for nodal points (where vibration magnitude is zero), so gradients must point towards
         // the neighbor with lowest vibration.
-        elapsed = performance.now();
+        let elapsedGradients = performance.now();
         this.computeGradients();
-        elapsed = performance.now() - elapsed;
-        console.info(`Gradients elapsed: ${elapsed.toFixed(0)}ms`);
+        let end = performance.now();
+        elapsedGradients = end - elapsedGradients;
+        const elapsedTotal = end - start;
+
+        console.info(`Baking took ${elapsedTotal.toFixed(0)}ms ` +
+            `(${elapsedVibration.toFixed(0)}ms vibration + ${elapsedGradients.toFixed(0)}ms gradients)`);
     }
 
     bakeNextGradients() {
         if (this.isResonantRound) {
-            const start = performance.now();
-            console.info("Baking gradients");
+
+            console.info("Baking gradients...");
             const chladniParams = CHLADNI_PARAMS[this.gradientParametersIndex];
 
             // could cache results (at the expense of huge memory consumption and being unable to do zero-copy transfer)
             this.recalculateGradients(chladniParams);
-
-            const elapsed = performance.now() - start;
-            console.info(`Baking took ${elapsed.toFixed(0)}ms`);
 
             this.gradientParametersIndex = (this.gradientParametersIndex + 1) % CHLADNI_PARAMS.length;
 
