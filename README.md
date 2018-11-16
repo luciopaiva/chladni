@@ -1,6 +1,8 @@
 
 # Chladni plate
 
+![](screenshot.png)
+
 The function that describes patterns in a square plate of side length `L` is given by:
 
     cos(n * PI * x / L) cos(m * PI * y / L) - cos(m * PI * x / L) cos(n * PI * y / L)
