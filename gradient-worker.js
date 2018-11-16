@@ -25,7 +25,7 @@ const CHLADNI_PARAMS = [
     new ChladniParams(2, 5, L2),
     new ChladniParams(3, 4, L2),
     new ChladniParams(3, 5, L2),
-    new ChladniParams(4, 5, L2),
+    new ChladniParams(3, 7, L2),
 ];
 
 class GradientWorker {
@@ -63,17 +63,21 @@ class GradientWorker {
         const M = chladniParams.m;
         const N = chladniParams.n;
         const L = chladniParams.l;
+        const R = 0;  // Math.random() * TAU;  // turn this on to introduce some asymmetry
+        // translate randomly to help spread particles
+        const TX = Math.random() * this.height;
+        const TY = Math.random() * this.height;
 
         this.vibrationValues = new Float32Array(this.width * this.height);
         for (let y = 0; y < this.height; y++) {
             for (let x = 0; x < this.width; x++) {
-                const scaledX = x * L;
-                const scaledY = y * L;
+                const scaledX = x * L + TX;
+                const scaledY = y * L + TY;
                 // ToDo when scaledX|scaledY > TAU, the pattern repeats - compute it once and just copy it for the rest
-                const MX = M * scaledX;
-                const NX = N * scaledX;
-                const MY = M * scaledY;
-                const NY = N * scaledY;
+                const MX = M * scaledX + R;
+                const NX = N * scaledX + R;
+                const MY = M * scaledY + R;
+                const NY = N * scaledY + R;
 
                 // Chladni equation
                 let value = Math.cos(NX) * Math.cos(MY) - Math.cos(MX) * Math.cos(NY);
