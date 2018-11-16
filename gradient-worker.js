@@ -67,13 +67,15 @@ class GradientWorker {
         for (let y = 0; y < this.height; y++) {
             for (let x = 0; x < this.width; x++) {
                 const index = y * this.width + x;
-                const normX = x / this.height;
-                const normY = y / this.height;
+                const scaledX = x / this.height * Math.PI / L;
+                const scaledY = y / this.height * Math.PI / L;
+                const MX = M * scaledX;
+                const NX = N * scaledX;
+                const MY = M * scaledY;
+                const NY = N * scaledY;
 
                 // Chladni equation
-                let value =
-                    Math.cos(N * normX * Math.PI / L) * Math.cos(M * normY * Math.PI / L) -
-                    Math.cos(M * normX * Math.PI / L) * Math.cos(N * normY * Math.PI / L);
+                let value = Math.cos(NX) * Math.cos(MY) - Math.cos(MX) * Math.cos(NY);
 
                 // normalize from [-2..2] to [-1..1]
                 value /= 2;
