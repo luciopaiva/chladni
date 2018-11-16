@@ -7,17 +7,24 @@ const L1 = 1/8;
 const L2 = 1/4;
 const L3 = 1/3;
 
-// good frequency configurations [M, N, L, isResonant] (L was empirically determined)
-const GRADIENT_CONFIGURATIONS = [
-    [1, 2, L1],
-    [1, 3, L2],
-    [1, 4, L3],
-    [1, 5, L2],
-    [2, 3, L3],
-    [2, 5, L2],
-    [3, 4, L3],
-    [3, 5, L2],
-    [4, 5, L3],
+class ChladniParams {
+    constructor (m, n, l) {
+        this.m = m;
+        this.n = n;
+        this.l = l;
+    }
+}
+
+const CHLADNI_PARAMS = [
+    new ChladniParams(1, 2, L1),
+    new ChladniParams(1, 3, L2),
+    new ChladniParams(1, 4, L3),
+    new ChladniParams(1, 5, L2),
+    new ChladniParams(2, 3, L3),
+    new ChladniParams(2, 5, L2),
+    new ChladniParams(3, 4, L3),
+    new ChladniParams(3, 5, L2),
+    new ChladniParams(4, 5, L3),
 ];
 
 class GradientWorker {
@@ -48,7 +55,14 @@ class GradientWorker {
         this.bakingTimer = setInterval(this.bakeNextGradients.bind(this), 3000);
     }
 
-    computeVibrationValues(M, N, L) {
+    /**
+     * @param {ChladniParams} chladniParams
+     */
+    computeVibrationValues(chladniParams) {
+        const M = chladniParams.m;
+        const N = chladniParams.n;
+        const L = chladniParams.l;
+
         this.vibrationValues = new Float32Array(this.width * this.height);
         for (let y = 0; y < this.height; y++) {
             for (let x = 0; x < this.width; x++) {
@@ -121,9 +135,9 @@ class GradientWorker {
         }
     }
 
-    recalculateGradients(M = 1, N = 1, L = 1) {
+    recalculateGradients(chladniParams) {
 
-        this.computeVibrationValues(M, N, L);
+        this.computeVibrationValues(chladniParams);
 
         // Now that the vibration magnitude of each point in the plate was calculated, we can calculate gradients.
         // Particles are looking for nodal points (where vibration magnitude is zero), so gradients must point towards
@@ -135,14 +149,15 @@ class GradientWorker {
         if (this.isResonantRound) {
             const start = performance.now();
             console.info("Baking gradients");
-            const [M, N, L] = GRADIENT_CONFIGURATIONS[this.gradientParametersIndex];
-            // ToDo could cache results (at the expense of huge memory consumption and being unable to do zero-copy transfer)
-            this.recalculateGradients(M, N, L);
+            const chladniParams = CHLADNI_PARAMS[this.gradientParametersIndex];
+
+            // could cache results (at the expense of huge memory consumption and being unable to do zero-copy transfer)
+            this.recalculateGradients(chladniParams);
 
             const elapsed = performance.now() - start;
             console.info(`Baking took ${elapsed.toFixed(0)}ms`);
 
-            this.gradientParametersIndex = (this.gradientParametersIndex + 1) % GRADIENT_CONFIGURATIONS.length;
+            this.gradientParametersIndex = (this.gradientParametersIndex + 1) % CHLADNI_PARAMS.length;
 
             self.postMessage({
                 vibrationIntensity: MODERATE_RANDOM_VIBRATION_INTENSITY,
