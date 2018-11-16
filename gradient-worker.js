@@ -70,8 +70,8 @@ class GradientWorker {
     }
 
     computeGradients() {
-        this.gradients = new Float32Array(this.width * this.height * 2);  // times 2 to contain x and y values for each point
-        this.gradients.fill(0);  // borders will have null gradient
+        this.gradients = new Float32Array(this.width * this.height * 2);  // times 2 to store x,y values for each point
+        this.gradients.fill(0);  // borders will have null gradient (to simplify both loops below)
         for (let y = 1; y < this.height - 1; y++) {
             for (let x = 1; x < this.width - 1; x++) {
                 const myIndex = y * this.width + x;
@@ -98,9 +98,9 @@ class GradientWorker {
 
                         // if neighbor has *same* vibration as minimum so far, consider it as well to avoid biasing
                         if (nv <= minVibrationSoFar) {
-                            const len = Math.hypot(nx, ny);
-                            const gx = nx / len;
-                            const gy = ny / len;
+                            // intentionally not normalizing by length here (very expensive and useless)
+                            const gx = nx;
+                            const gy = ny;
 
                             if (nv < minVibrationSoFar) {
                                 minVibrationSoFar = nv;
@@ -112,9 +112,8 @@ class GradientWorker {
                 }
 
                 const index = (y * this.width + x) * 2;
-                // choose randomly to avoid biasing
-                // ToDo do not call random() if has just one candidate
-                const chosenGradient = candidateGradients[Math.floor(Math.random() * candidateGradients.length)];
+                const chosenGradient = candidateGradients.length === 1 ? candidateGradients[0] :
+                    candidateGradients[Math.floor(Math.random() * candidateGradients.length)];  // to avoid biasing
 
                 this.gradients[index] = chosenGradient[0];
                 this.gradients[index + 1] = chosenGradient[1];
