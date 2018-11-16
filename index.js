@@ -33,9 +33,6 @@ class ChladniApp {
         this.width = window.innerWidth / CANVAS_SCALE;
         this.height = window.innerHeight / CANVAS_SCALE;
 
-        this.fpsCount = 0;
-        this.fallingCount = 0;
-
         const debounceTimer = new Debouncer();
 
         this.particles = new Float32Array(NUM_PARTICLES * 2);
@@ -54,6 +51,7 @@ class ChladniApp {
 
         this.backgroundColor = Utils.cssColorToColor(Utils.readCssVarAsHexNumber("background-color"));
 
+        this.fpsCount = 0;
         this.initStatus();
 
         this.worker = new Worker("gradient-worker.js");
@@ -64,14 +62,14 @@ class ChladniApp {
 
         this.updateFn = this.update.bind(this);
         this.update(performance.now());
+
+        setInterval(this.checkForFallenParticles.bind(this), 10000);
     }
 
     initStatus() {
         this.fpsElem = document.getElementById("fps");
-        this.fallingElem = document.getElementById("falling");
         setInterval(() => {
             this.fpsElem.innerText = this.fpsCount.toString(); this.fpsCount = 0;
-            this.fallingElem.innerText = this.fallingCount.toString(); this.fallingCount = 0;
         }, 1000);
     }
 
@@ -109,9 +107,21 @@ class ChladniApp {
         }
     }
 
-    didParticleFall(x, y) {
-        const SLACK = 100;
-        return x < -SLACK || x >= this.width + SLACK || y < -SLACK || y >= this.height + SLACK;
+    // replace sand that fell from the plate
+    checkForFallenParticles() {
+        const SLACK = 100;  // allow particles to really leave the screen before replacing them
+
+        for (let i = 0; i < this.particles.length; i += 2) {
+            let x = this.particles[i];
+            let y = this.particles[i + 1];
+
+            const didFall = x < -SLACK || x >= this.width + SLACK || y < -SLACK || y >= this.height + SLACK;
+
+            if (didFall) {
+                this.particles[i] = Math.random() * this.width;
+                this.particles[i + 1] = Math.random() * this.height;
+            }
+        }
     }
 
     obtainGradientAt(x, y) {
@@ -151,21 +161,13 @@ class ChladniApp {
             }
 
             // random vibration
-            x += (Math.random() * this.vibrationIntensity - this.halfVibrationIntensity);
-            y += (Math.random() * this.vibrationIntensity - this.halfVibrationIntensity);
+            x += Math.random() * this.vibrationIntensity - this.halfVibrationIntensity;
+            y += Math.random() * this.vibrationIntensity - this.halfVibrationIntensity;
 
             this.particles[i] = x;
             this.particles[i + 1] = y;
 
             this.buffer[Math.round(y) * this.width + Math.round(x)] = color;
-
-            // ToDo do this check less frequently
-            // replace sand if it fell from the plate
-            if (this.didParticleFall(x, y)) {
-                this.particles[i] = Math.random() * this.width;
-                this.particles[i + 1] = Math.random() * this.height;
-                this.fallingCount++;
-            }
         }
 
         this.context.putImageData(this.imageData, 0, 0);
