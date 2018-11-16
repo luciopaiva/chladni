@@ -1,22 +1,23 @@
 
-const MODERATE_RANDOM_VIBRATION_INTENSITY = 2;
+const MODERATE_RANDOM_VIBRATION_INTENSITY = 3;
 const AGGRESSIVE_RANDOM_VIBRATION_INTENSITY = MODERATE_RANDOM_VIBRATION_INTENSITY * 1.5;
 const MIN_NODE_THRESHOLD = 1e-2;
 
-const L = 1/4;
-const L2 = 1/3;
+const L1 = 1/8;
+const L2 = 1/4;
+const L3 = 1/3;
 
 // good frequency configurations [M, N, L, isResonant] (L was empirically determined)
 const GRADIENT_CONFIGURATIONS = [
-    [1, 2, 1/8],
-    [1, 3, L],
-    [1, 4, L2],
-    [1, 5, L],
-    [2, 3, L2],
-    [2, 5, L],
-    [3, 4, L2],
-    [3, 5, L],
-    [4, 5, L2],
+    [1, 2, L1],
+    [1, 3, L2],
+    [1, 4, L3],
+    [1, 5, L2],
+    [2, 3, L3],
+    [2, 5, L2],
+    [3, 4, L3],
+    [3, 5, L2],
+    [4, 5, L3],
 ];
 
 class GradientWorker {

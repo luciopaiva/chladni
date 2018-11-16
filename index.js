@@ -5,7 +5,7 @@ import {Debouncer} from "./utils.js";
 const NUM_PARTICLES = 40000;
 const DEFAULT_RANDOM_VIBRATION_INTENSITY = 2;
 const MAX_GRADIENT_INTENSITY = .4;
-const DEBUG_VIBRATION_LEVELS = true;
+const DEBUG_VIBRATION_LEVELS = false;
 const CANVAS_SCALE = 2;
 
 
