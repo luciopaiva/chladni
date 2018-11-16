@@ -1,6 +1,6 @@
 
 const MODERATE_RANDOM_VIBRATION_INTENSITY = 2;
-const AGGRESSIVE_RANDOM_VIBRATION_INTENSITY = MODERATE_RANDOM_VIBRATION_INTENSITY * 1;
+const AGGRESSIVE_RANDOM_VIBRATION_INTENSITY = MODERATE_RANDOM_VIBRATION_INTENSITY * 1.5;
 const MIN_NODE_THRESHOLD = 1e-2;
 
 const L = 1/4;
@@ -8,24 +8,15 @@ const L2 = 1/3;
 
 // good frequency configurations [M, N, L, isResonant] (L was empirically determined)
 const GRADIENT_CONFIGURATIONS = [
-    [1, 2, L2, true],
-    [1, 1, L, false],
-    [1, 3, L, true],
-    [1, 1, L, false],
-    [1, 4, L2, true],
-    [1, 1, L, false],
-    [1, 5, L, true],
-    [1, 1, L, false],
-    [2, 3, L2, true],
-    [1, 1, L, false],
-    [2, 5, L, true],
-    [1, 1, L, false],
-    [3, 4, L2, true],
-    [1, 1, L, false],
-    [3, 5, L, true],
-    [1, 1, L, false],
-    [4, 5, L2, true],
-    [1, 1, L, false],
+    [1, 2, 1/8],
+    [1, 3, L],
+    [1, 4, L2],
+    [1, 5, L],
+    [2, 3, L2],
+    [2, 5, L],
+    [3, 4, L2],
+    [3, 5, L],
+    [4, 5, L2],
 ];
 
 class GradientWorker {
@@ -37,6 +28,7 @@ class GradientWorker {
         this.height = null;
         this.gradientParametersIndex = 0;
         this.bakingTimer = null;
+        this.isResonantRound = true;
 
         self.addEventListener("message", this.receiveUpdateFromMainThread.bind(this));
     }
@@ -138,21 +130,33 @@ class GradientWorker {
     }
 
     bakeNextGradients() {
-        const start = performance.now();
-        console.info("Baking gradients");
-        const [M, N, L, isResonant] = GRADIENT_CONFIGURATIONS[this.gradientParametersIndex];
-        const vibrationIntensity = isResonant ? MODERATE_RANDOM_VIBRATION_INTENSITY : AGGRESSIVE_RANDOM_VIBRATION_INTENSITY * 4;
-        // ToDo could cache results (at the expense of huge memory consumption and being unable to do zero-copy transfer)
-        this.recalculateGradients(M, N, L);
-        this.gradientParametersIndex = (this.gradientParametersIndex + 1) % GRADIENT_CONFIGURATIONS.length;
-        const elapsed = performance.now() - start;
-        console.info(`Baking took ${elapsed.toFixed(0)}ms`);
+        if (this.isResonantRound) {
+            const start = performance.now();
+            console.info("Baking gradients");
+            const [M, N, L] = GRADIENT_CONFIGURATIONS[this.gradientParametersIndex];
+            // ToDo could cache results (at the expense of huge memory consumption and being unable to do zero-copy transfer)
+            this.recalculateGradients(M, N, L);
 
-        self.postMessage({
-            vibrationIntensity,
-            vibrationValues: this.vibrationValues.buffer,
-            gradients: this.gradients.buffer,
-        }, [this.vibrationValues.buffer, this.gradients.buffer]);  // these will be zero-copy-transferred
+            const elapsed = performance.now() - start;
+            console.info(`Baking took ${elapsed.toFixed(0)}ms`);
+
+            this.gradientParametersIndex = (this.gradientParametersIndex + 1) % GRADIENT_CONFIGURATIONS.length;
+
+            self.postMessage({
+                vibrationIntensity: MODERATE_RANDOM_VIBRATION_INTENSITY,
+                vibrationValues: this.vibrationValues.buffer,
+                gradients: this.gradients.buffer,
+            }, [this.vibrationValues.buffer, this.gradients.buffer]);  // these will be zero-copy-transferred
+        } else {
+
+            self.postMessage({
+                vibrationIntensity: AGGRESSIVE_RANDOM_VIBRATION_INTENSITY,
+                vibrationValues: null,
+                gradients: null,
+            });
+        }
+
+        this.isResonantRound = !this.isResonantRound;
     }
 }
 

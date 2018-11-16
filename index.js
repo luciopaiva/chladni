@@ -89,8 +89,8 @@ class ChladniApp {
         console.info("Message from worker");
         this.vibrationIntensity = message.data.vibrationIntensity;
         this.halfVibrationIntensity = this.vibrationIntensity / 2;
-        this.vibrationValues = new Float32Array(message.data.vibrationValues);
-        this.gradients = new Float32Array(message.data.gradients);
+        this.vibrationValues = message.data.vibrationValues ? new Float32Array(message.data.vibrationValues) : null;
+        this.gradients = message.data.gradients ? new Float32Array(message.data.gradients) : null;
     }
 
     didParticleFall(x, y) {
