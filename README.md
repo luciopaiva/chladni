@@ -1,7 +1,7 @@
 
 # Chladni plate
 
-See live demo [here](https://github.com/luciopaiva/chladni/blob/master/README.md).
+See live demo [here](https://luciopaiva.com/chladni).
 
 ![](screenshot.png)
 
