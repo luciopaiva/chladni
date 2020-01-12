@@ -1,6 +1,8 @@
 
 # Chladni plate
 
+See live demo [here](https://github.com/luciopaiva/chladni/blob/master/README.md).
+
 ![](screenshot.png)
 
 The function that describes patterns in a square plate of side length `L` is given by:
