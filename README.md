@@ -3,7 +3,9 @@
 
 ![](screenshot.png)
 
-The function that describes patterns in a square plate of side length `L` is given by:
+When resonating, a vibrating plate is divided into regions that oscillate in opposite directions, bounded by lines where no vibration occurs. The resulting patterns are what is called [Chladni figures](https://en.wikipedia.org/wiki/Ernst_Chladni#Chladni_figures). This simulation aims at replicating that same behavior on a digital canvas.
+
+One of the key factors causing the patterns is the shape of the plate being vibrated. For this simulation, a square plate is assumed. The function that describes patterns in a square plate of side length `L` is given by:
 
     cos(n * π * x / L) cos(m * π * y / L) - cos(m * π * x / L) cos(n * π * y / L)
 
@@ -11,7 +13,7 @@ Where `x, y` is the screen coordinate to compute and picking different `m` and `
 
 ## Implementation details
 
-My idea was to cycle through random Chladni patterns, as if the plate's input frequency was changing periodically.
+My idea was to cycle through random Chladni patterns, as if the plate's vibration input frequency was changing periodically.
 
 To make it easy for the CPU, I compute the whole Chladni pattern only once and then just simulate particles shaking and moving around until the next cycle.
 
@@ -21,4 +23,4 @@ Computing a single Chladni pattern plus gradients is very expensive, taking arou
 
 ## References
 
-Paul Bourke's [article on Chladni plates](http://paulbourke.net/geometry/chladni/) was extremely helpful.
+[Paul Bourke](https://twitter.com/pauldavidbourke)'s [article on Chladni plates](http://paulbourke.net/geometry/chladni/) was extremely helpful.

@@ -2,7 +2,24 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, shrink-to-fit=yes">
     <title>Chladni plate</title>
+
+    <meta name="title" content="Chladni plate">
+    <meta name="author" content="Lucio Paiva">
+    <meta name="description" content="When resonating, a vibrating plate is divided into regions that oscillate in opposite directions, bounded by lines where no vibration occurs. The resulting patterns are what is called Chladni figures.">
+
+    <meta property="og:type" content="article">
+    <meta property="og:title" content="Chladni plate">
+    <meta property="og:description" content="When resonating, a vibrating plate is divided into regions that oscillate in opposite directions, bounded by lines where no vibration occurs. The resulting patterns are what is called Chladni figures.">
+    <meta property="og:site_name" content="Lucio Paiva">
+    <meta property="og:url" content="https://luciopaiva.com/chladni/">
+    <meta property="og:image" content="https://luciopaiva.com/chladni/screenshot.png">
+    <meta property="article:author" content="https://luciopaiva.com">
+    <meta property="article:published_time" content="2018-11-15T00:00:00.000Z">
+
+    <link rel="author" href="https://luciopaiva.com">
+
     <style>
         :root {
             --non-resonant-color: #9b9b9b;
@@ -48,13 +65,39 @@
 
             display: none;  /* change to show status */
         }
+        #author {
+            position: absolute;
+            right: 20px;
+            bottom: 20px;
+        }
+        .circle-portrait {
+            width: 48px;
+            border-radius: 24px;
+        }
+        .inverted {
+            filter: invert(100%);
+        }
     </style>
     <script src="utils.js" defer type="module"></script>
     <script src="index.js" defer type="module"></script>
+    <script>
+        (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+            (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+            m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+        })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+        ga('create', 'UA-101273659-1', 'auto');
+        ga('send', 'pageview');
+    </script>
 </head>
 <body>
 <div id="status">
     <p>fps: <span id="fps"></span></p>
 </div>
+<span id="author">
+    <a href="https://luciopaiva.com"><img class="circle-portrait" src="https://luciopaiva.com/img/avatar.jpg" alt="avatar" title="Lucio Paiva, 2018"></a>
+    <a href="https://github.com/luciopaiva/chladni">
+        <img src="https://luciopaiva.com/img/github-logo.svg" alt="github" class="circle-portrait inverted" title="Source code">
+    </a>
+</span>
 </body>
 </html>
