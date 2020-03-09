@@ -5,7 +5,7 @@ See live demo [here](https://luciopaiva.com/chladni).
 
 ![](screenshot.png)
 
-When resonating, a vibrating plate is divided into regions that oscillate in opposite directions, bounded by lines where no vibration occurs. The resulting patterns are what is called [Chladni figures](https://en.wikipedia.org/wiki/Ernst_Chladni#Chladni_figures). This simulation aims at replicating that same behavior on a digital canvas.
+When resonating, a vibrating plate is divided into regions that oscillate in opposite directions, bounded by lines where no vibration occurs. Particles standing on top of the plate tend to settle right on those lines. The resulting patterns are what is called [Chladni figures](https://en.wikipedia.org/wiki/Ernst_Chladni#Chladni_figures), after [Ernst Chladni](https://en.wikipedia.org/wiki/Ernst_Chladni). This simulation aims at replicating that same behavior on a digital canvas.
 
 One of the key factors causing the patterns is the shape of the plate being vibrated. For this simulation, a square plate is assumed. The function that describes patterns in a square plate of side length `L` is given by:
 
