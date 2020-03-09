@@ -1,6 +1,8 @@
 
 # Chladni plate
 
+See live demo [here](https://luciopaiva.com/chladni).
+
 ![](screenshot.png)
 
 When resonating, a vibrating plate is divided into regions that oscillate in opposite directions, bounded by lines where no vibration occurs. The resulting patterns are what is called [Chladni figures](https://en.wikipedia.org/wiki/Ernst_Chladni#Chladni_figures). This simulation aims at replicating that same behavior on a digital canvas.
